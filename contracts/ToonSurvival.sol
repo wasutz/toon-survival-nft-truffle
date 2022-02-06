@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract ToonSurvival is ERC721A, Ownable {
   using Strings for uint256;
 
-  string public baseURI;
+  string baseURI;
   string public hiddenURI;
   uint256 public cost = 0.1 ether;
   uint256 public maxSupply = 100;
