@@ -1,6 +1,5 @@
 {
   "dependencies": {
-    "@openzeppelin/contracts": "4.4.2",
     "dotenv": "16.0.0",
     "erc721a": "2.1.0"
   },
