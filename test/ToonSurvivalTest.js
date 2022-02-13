@@ -36,11 +36,21 @@ contract("ToonSurvival", accounts => {
     });
 
     it('should mint failed when mintAmount is greater than maxMintAmountPerTx', async () => {
-        await toonSurvival.setPaused(true);
         await expectRevert(toonSurvival.mint(6, {
             from: accounts[0],
             value:  web3.utils.toWei('0.1', 'ether')
         }), "Invalid mint amount!");
+    });
+
+    it('should mint failed when address mint amount is greater than maxMintAmount', async () => {
+        await toonSurvival.mint(2, {from: accounts[0], value: web3.utils.toWei('0.2', 'ether')});
+        await toonSurvival.mint(2, {from: accounts[0], value: web3.utils.toWei('0.2', 'ether')});
+        await toonSurvival.mint(1, {from: accounts[0], value: web3.utils.toWei('0.1', 'ether')});
+
+        await expectRevert(toonSurvival.mint(1, {
+            from: accounts[0],
+            value:  web3.utils.toWei('0.1', 'ether')
+        }), "Mint over max mint amount!");
     });
 
     it('should mint failed when insufficient fund', async () => {

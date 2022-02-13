@@ -11,7 +11,8 @@ contract ToonSurvival is ERC721A, Ownable {
   string public hiddenBaseURI;
   uint256 public cost = 0.1 ether;
   uint256 public maxSupply = 100;
-  uint256 public maxMintAmountPerTx = 5;
+  uint256 public maxMintAmount = 5;
+  uint256 public maxMintAmountPerTx = 2;
   bool public paused = false;
   bool public revealed = false;
 
@@ -31,6 +32,7 @@ contract ToonSurvival is ERC721A, Ownable {
 
   function mint(uint256 _mintAmount) public payable mintCompliance(_mintAmount) {
     require(!paused, "The contract is paused!");
+    require(balanceOf(msg.sender) + _mintAmount <= maxMintAmount, "Mint over max mint amount!");
     require(msg.value >= cost * _mintAmount, "Insufficient funds!");
 
     _safeMint(msg.sender, _mintAmount);
@@ -82,6 +84,10 @@ contract ToonSurvival is ERC721A, Ownable {
 
   function setCost(uint256 _cost) public onlyOwner() {
     cost = _cost;
+  }
+
+  function setMaxMintAmount(uint256 _maxMintAmount) public onlyOwner() {
+    maxMintAmount = _maxMintAmount;
   }
 
   function setMaxMintAmountPerTx(uint256 _maxMintAmountPerTx) public onlyOwner() {
