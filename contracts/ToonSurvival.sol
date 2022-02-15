@@ -7,14 +7,22 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract ToonSurvival is ERC721A, Ownable {
   using Strings for uint256;
 
+  enum Stages {
+    Paused,
+    Presale,
+    PublicSale
+  }
+
   string baseURI;
   string public hiddenBaseURI;
   uint256 public cost = 0.1 ether;
   uint256 public maxSupply = 100;
   uint256 public maxMintAmount = 5;
   uint256 public maxMintAmountPerTx = 2;
-  bool public paused = false;
   bool public revealed = false;
+  Stages public stage = Stages.Paused;
+
+  mapping(address => bool) private whitelist;
 
   constructor(
     string memory _initBaseURI,
@@ -31,9 +39,13 @@ contract ToonSurvival is ERC721A, Ownable {
   }
 
   function mint(uint256 _mintAmount) public payable mintCompliance(_mintAmount) {
-    require(!paused, "The contract is paused!");
+    require(stage != Stages.Paused, "The contract is paused!");
     require(balanceOf(msg.sender) + _mintAmount <= maxMintAmount, "Mint over max mint amount!");
     require(msg.value >= cost * _mintAmount, "Insufficient funds!");
+
+    if (stage == Stages.Presale) {
+      require(isWhitelist(msg.sender), "User is not whitelisted!");
+    }
 
     _safeMint(msg.sender, _mintAmount);
   }
@@ -55,13 +67,7 @@ contract ToonSurvival is ERC721A, Ownable {
     return tokenIds;
   }
 
-  function tokenURI(uint256 tokenId)
-    public
-    view
-    virtual
-    override
-    returns (string memory)
-  {
+  function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
     require(
       _exists(tokenId),
       "ERC721Metadata: URI query for nonexistent token"
@@ -94,8 +100,12 @@ contract ToonSurvival is ERC721A, Ownable {
     maxMintAmountPerTx = _maxMintAmountPerTx;
   }
 
-  function setPaused(bool _paused) public onlyOwner {
-    paused = _paused;
+  function setStage(Stages _stage) public onlyOwner {
+    stage = _stage;
+  }
+
+  function isWhitelist(address _address) public view returns (bool){
+    return whitelist[_address];
   }
 
   function setRevealed(bool _revealed) public onlyOwner {
@@ -105,6 +115,12 @@ contract ToonSurvival is ERC721A, Ownable {
   function withdraw() public payable onlyOwner {
     (bool success, ) = payable(msg.sender).call{value: address(this).balance}("");
     require(success);
+  }
+
+  function addToWhitelist(address[] calldata _addresses) external onlyOwner {
+    for (uint256 i; i < _addresses.length; i++) {
+        whitelist[_addresses[i]] = true;
+    }
   }
 
   function _baseURI() internal view virtual override returns (string memory) {
